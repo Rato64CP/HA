@@ -1,0 +1,1211 @@
+- id: '1749500194496'
+  alias: HLAĐENJE CRKVE - prije mise
+  description: ''
+  triggers:
+  - minutes: /10
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: input_boolean.koristiti_klima_uredaje
+    state: 'on'
+  - condition: template
+    value_template: '{{ now().month in [5, 6, 7, 8, 9, 10] }}'
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: input_boolean.koristiti_prognozu_vremena
+      state: 'off'
+    - condition: template
+      value_template: "{% set prognoza = state_attr('weather.forecast_home_2', 'forecast')
+        %} {% set min_temp = states('input_number.minimalna_temperatura_za_hladjenje')
+        | float %} {% if prognoza is defined and prognoza[0].temperature is defined
+        %}\n  {{ prognoza[0].temperature >= min_temp }}\n{% else %}\n  true\n{% endif
+        %}\n"
+  - condition: or
+    conditions:
+    - condition: and
+      conditions:
+      - condition: template
+        value_template: '{{ now().weekday() in [0,1,2,3,4,5] }}'
+      - condition: template
+        value_template: "{% set vrsta = states('input_select.vrsta_dnevne_mise') %}
+          {% set vrijeme_str = states('input_select.vrijeme_dnevne_mise') %} {% set
+          sati = states('input_number.klima_hladjenje_satnica') | float %} {% if not
+          vrijeme_str or ':' not in vrijeme_str %}\n  false\n{% else %}\n  {% set
+          misa = strptime(vrijeme_str, '%H:%M') %}\n  {% set misa_dt = now().replace(hour=misa.hour,
+          minute=misa.minute, second=0, microsecond=0) %}\n  {% set start = (misa_dt
+          - timedelta(hours=sati)).time() %}\n  {% set end = (misa_dt + timedelta(minutes=30)).time()
+          %}\n  {% set sada = now().time() %}\n  {{ vrsta in ['Obična dnevna misa',
+          'Blagdan', 'Svetkovina'] and start <= sada <= end }}\n{% endif %}\n"
+    - condition: and
+      conditions:
+      - condition: template
+        value_template: '{{ now().weekday() == 6 }}'
+      - condition: template
+        value_template: "{% set vrijeme_str = states('input_select.vrijeme_nedjeljne_vecernje_mise')
+          %} {% set sati = states('input_number.klima_hladjenje_satnica') | float
+          %} {% if vrijeme_str == 'Nema mise' or ':' not in vrijeme_str %}\n  false\n{%
+          else %}\n  {% set misa = strptime(vrijeme_str, '%H:%M') %}\n  {% set misa_dt
+          = now().replace(hour=misa.hour, minute=misa.minute, second=0, microsecond=0)
+          %}\n  {% set start = (misa_dt - timedelta(hours=sati)).time() %}\n  {% set
+          end = (misa_dt + timedelta(minutes=30)).time() %}\n  {% set sada = now().time()
+          %}\n  {{ start <= sada <= end }}\n{% endif %}\n"
+  - condition: state
+    entity_id: input_boolean.dnevna_misa_vec_zvonilo
+    state: 'off'
+  - condition: state
+    entity_id: input_boolean.blokiraj_automatsko_hladenje
+    state: 'off'
+  actions:
+  - data:
+      message: Automatizacija hlađenja crkve se pokrenula u {{ now() }}
+      level: info
+    action: system_log.write
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_1
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b8c89e
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b8c89e
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_2
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b8c8a4
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b8c8a4
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_3
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b8c92a
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b8c92a
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_4
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b87ea5
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b87ea5
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_5
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8698184
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8698184
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_sakristija
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.c039370a331f
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.c039370a331f
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_sakristija'')
+          | float }}'
+      action: climate.set_temperature
+  mode: single
+- id: '1749500392766'
+  alias: HLAĐENJE CRKVE - Gašenje nakon mise
+  description: ''
+  triggers:
+  - minutes: /1
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: input_boolean.koristiti_klima_uredaje
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.rucno_hladenje
+    state: 'off'
+  - condition: template
+    value_template: "{% set sada = now().time() %} {% set aktivacija = false %} {%
+      set vrsta_mise = states('input_select.vrsta_dnevne_mise') %}\n{% if now().weekday()
+      == 6 %}\n  {# Nedjelja #}\n  {% set jutro_str = states('input_select.vrijeme_nedjeljne_jutarnje_mise')
+      %}\n  {% set vecer_str = states('input_select.vrijeme_nedjeljne_vecernje_mise')
+      %}\n\n  {% if jutro_str != 'Nema mise' and ':' in jutro_str %}\n    {% set misa_jutro
+      = strptime(jutro_str, '%H:%M') %}\n    {% set offset_jutro = states('input_number.gasenje_klime_nedjelja_jutro')
+      | int %}\n    {% set kraj_jutro = (misa_jutro + timedelta(minutes=offset_jutro)).time()
+      %}\n    {% if sada.strftime('%H:%M') == kraj_jutro.strftime('%H:%M') %}\n      {%
+      set aktivacija = true %}\n    {% endif %}\n  {% endif %}\n\n  {% if vecer_str
+      != 'Nema mise' and ':' in vecer_str %}\n    {% set misa_vecer = strptime(vecer_str,
+      '%H:%M') %}\n    {% set offset_vecer = states('input_number.gasenje_klime_druge_mise')
+      | int %}\n    {% set kraj_vecer = (misa_vecer + timedelta(minutes=offset_vecer)).time()
+      %}\n    {% if sada.strftime('%H:%M') == kraj_vecer.strftime('%H:%M') %}\n      {%
+      set aktivacija = true %}\n    {% endif %}\n  {% endif %}\n\n{% else %}\n  {#
+      Ostali dani #}\n  {% set misa_str = states('input_select.vrijeme_dnevne_mise')
+      %}\n  {% if misa_str and ':' in misa_str %}\n    {% set misa = strptime(misa_str,
+      '%H:%M') %}\n    {% if vrsta_mise == 'Svetkovina' %}\n      {% set offset =
+      states('input_number.gasenje_klime_nedjelja_jutro') | int %}\n    {% else %}\n
+      \     {% set offset = states('input_number.gasenje_klime_druge_mise') | int
+      %}\n    {% endif %}\n    {% set kraj = (misa + timedelta(minutes=offset)).time()
+      %}\n    {% if sada.strftime('%H:%M') == kraj.strftime('%H:%M') %}\n      {%
+      set aktivacija = true %}\n    {% endif %}\n  {% endif %}\n{% endif %}\n{{ aktivacija
+      }}"
+  actions:
+  - data:
+      message: Gašenje svih klima nakon mise u {{ now() }}
+      level: info
+    action: system_log.write
+  - target:
+      entity_id:
+      - climate.9424b8b8c89e
+      - climate.9424b8b8c8a4
+      - climate.9424b8b8c92a
+      - climate.9424b8b87ea5
+      - climate.9424b8698184
+      - climate.c039370a331f
+    action: climate.turn_off
+- id: '1749627144225'
+  alias: RAZGLAS - uključenje prije mise
+  description: ''
+  triggers:
+  - minutes: /5
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automatika_razglasa
+    state: 'on'
+  - condition: template
+    value_template: "{% set ib = states.input_boolean.dnevna_misa_vec_zvonilo %} {%
+      if ib.state == 'off' %}\n  true\n{% else %}\n  {{ (now() - ib.last_changed).total_seconds()
+      <= 7200 }}\n{% endif %}\n"
+  - condition: or
+    conditions:
+    - condition: and
+      conditions:
+      - condition: template
+        value_template: '{{ now().weekday() in [0,1,2,3,4,5] }}'
+      - condition: template
+        value_template: "{{ states('input_select.vrsta_dnevne_mise')\n   in ['Obična
+          dnevna misa', 'Blagdan', 'Svetkovina'] }}\n"
+      - condition: template
+        value_template: "{% set misa_str = states('input_select.vrijeme_dnevne_mise')
+          %} {% if not misa_str or ':' not in misa_str %}\n  false\n{% else %}\n  {%
+          set misa = strptime(misa_str, '%H:%M') %}\n  {% set sada = now() %}\n  {%
+          set minuta_prije = 45 if sada.month in [5, 10] else 30 %}\n  {% set vrijeme
+          = misa - timedelta(minutes=minuta_prije) %}\n  {{ vrijeme.time() <= sada.time()
+          <= (vrijeme + timedelta(minutes=5)).time() }}\n{% endif %}\n"
+    - condition: and
+      conditions:
+      - condition: template
+        value_template: '{{ now().weekday() == 6 }}'
+      - condition: template
+        value_template: "{% set misa_str = states('input_select.vrijeme_nedjeljne_vecernje_mise')
+          %} {% if misa_str == 'Nema mise' or ':' not in misa_str %}\n  false\n{%
+          else %}\n  {% set misa = strptime(misa_str, '%H:%M') %}\n  {% set sada =
+          now() %}\n  {% set minuta_prije = 45 if sada.month in [5, 10] else 30 %}\n
+          \ {% set vrijeme = misa - timedelta(minutes=minuta_prije) %}\n  {{ vrijeme.time()
+          <= sada.time() <= (vrijeme + timedelta(minutes=5)).time() }}\n{% endif %}\n"
+  actions:
+  - target:
+      entity_id: switch.sonoff_10010e7b86
+    action: switch.turn_on
+  mode: single
+- id: '1749627338488'
+  alias: RAZGLAS - automatsko gašenje u 2:30
+  description: ''
+  triggers:
+  - at: 02:30:00
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automatika_razglasa
+    state: 'on'
+  actions:
+  - target:
+      entity_id: switch.sonoff_10010e7b86
+    action: switch.turn_off
+  mode: single
+- id: '1749627761368'
+  alias: RAZGLAS - uključenje nedjeljom ujutro
+  description: ''
+  triggers:
+  - minutes: /5
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automatika_razglasa
+    state: 'on'
+  - condition: template
+    value_template: '{{ now().weekday() == 6 }}'
+  - condition: template
+    value_template: '{% set misa = strptime(states(''input_select.vrijeme_nedjeljne_jutarnje_mise''),
+      ''%H:%M'') %} {% set sada = now() %} {% set vrijeme_ukljucenja = (misa - timedelta(minutes=45)).time()
+      %} {{ sada.time() >= vrijeme_ukljucenja and sada.time() <= (vrijeme_ukljucenja.replace(minute=vrijeme_ukljucenja.minute
+      + 5) if vrijeme_ukljucenja.minute <= 55 else sada.time()) }}
+
+      '
+  actions:
+  - target:
+      entity_id: switch.sonoff_10010e7b86
+    action: switch.turn_on
+  mode: single
+- id: '1749628214287'
+  alias: HLAĐENJE CRKVE - Nedjelja prije jutarnje mise
+  description: ''
+  triggers:
+  - minutes: /30
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: input_boolean.koristiti_klima_uredaje
+    state: 'on'
+  - condition: template
+    value_template: '{{ now().month in [5, 6, 7, 8, 9, 10] }}'
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: input_boolean.koristiti_prognozu_vremena
+      state: 'off'
+    - condition: template
+      value_template: "{% set prognoza = state_attr('weather.forecast_home_2', 'forecast')
+        %} {% set min_temp = states('input_number.minimalna_temperatura_za_hladjenje')
+        | float %} {% if prognoza is defined and prognoza[0].temperature is defined
+        %}\n  {{ prognoza[0].temperature >= min_temp }}\n{% else %}\n  true\n{% endif
+        %}\n"
+  - condition: template
+    value_template: '{{ now().weekday() == 6 }}'
+  - condition: template
+    value_template: "{% set vrijeme_str = states('input_select.vrijeme_nedjeljne_jutarnje_mise')
+      %} {% set sati = states('input_number.klima_hladjenje_satnica_nedjeljom') |
+      float %} {% if not vrijeme_str or ':' not in vrijeme_str %}\n  false\n{% else
+      %}\n  {% set misa = strptime(vrijeme_str, '%H:%M') %}\n  {% set misa_dt = now().replace(hour=misa.hour,
+      minute=misa.minute, second=0, microsecond=0) %}\n  {% set start = (misa_dt -
+      timedelta(hours=sati)).time() %}\n  {% set end = (misa_dt + timedelta(minutes=30)).time()
+      %}\n  {% set sada = now().time() %}\n  {{ start <= sada <= end }}\n{% endif
+      %}\n"
+  - condition: state
+    entity_id: input_boolean.blokiraj_automatsko_hladenje
+    state: 'off'
+  actions:
+  - data:
+      message: Automatizacija hlađenja crkve (nedjeljna jutarnja misa) pokrenuta u
+        {{ now() }}
+      level: info
+    action: system_log.write
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_1
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b8c89e
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b8c89e
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_2
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b8c8a4
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b8c8a4
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_3
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b8c92a
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b8c92a
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_4
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b87ea5
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b87ea5
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_5
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8698184
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8698184
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_sakristija
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.c039370a331f
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.c039370a331f
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_sakristija'')
+          | float }}'
+      action: climate.set_temperature
+  mode: single
+- id: '1749631524485'
+  alias: ZDRAVOMARIJA - večernje zvono
+  description: ''
+  triggers:
+  - minutes: /1
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automatika_zdravomarije_navecer
+    state: 'on'
+  - condition: time
+    after: '16:00:00'
+    before: '21:30:00'
+  - condition: template
+    value_template: "{% set misa_str = states('input_select.vrijeme_dnevne_mise')
+      %} {% if misa_str == 'Nema mise' %}\n  {% set misa_jutarnja = true %}\n  {%
+      set misa = now().replace(hour=6, minute=0, second=0) %}\n{% else %}\n  {% set
+      misa = strptime(misa_str, '%H:%M') %}\n  {% set misa_jutarnja = misa.hour <
+      12 %}\n{% endif %}\n{% set zalaz10_str = states('sensor.zalaz10') %} {% set
+      zalaz10 = strptime(zalaz10_str, '%H:%M') %} {% set sada = now() %} {% set diff
+      = (zalaz10 | as_datetime - misa | as_datetime).total_seconds() / 60 %} {% set
+      je_korizmeni_petak = is_state('binary_sensor.korizmeni_petak', 'on') %} {% set
+      dodatak = 80 if je_korizmeni_petak else 40 %}\n{% if misa_jutarnja %}\n  {%
+      set raw_cilj = zalaz10 %}\n{% elif diff >= dodatak %}\n  {% set raw_cilj = zalaz10
+      %}\n{% else %}\n  {% set raw_cilj = misa + timedelta(minutes=dodatak) %}\n{%
+      endif %}\n{% set base = today_at(raw_cilj.strftime('%H:%M')) %}\n{% if base.minute
+      in [56, 57] %}\n  {% set cilj = base - timedelta(minutes=1) %}\n{% elif base.minute
+      in [58, 59] %}\n  {% set cilj = base.replace(minute=0, second=30) + timedelta(hours=1)
+      %}\n{% elif base.minute == 0 %}\n  {% set cilj = base + timedelta(seconds=30)
+      %}\n{% else %}\n  {% set cilj = base %}\n{% endif %}\n{{ sada.strftime('%H:%M')
+      == cilj.strftime('%H:%M') }}\n"
+  actions:
+  - if:
+    - condition: template
+      value_template: '{{ now().minute == 30 and now().second == 0 }}'
+    then:
+    - delay: 00:00:05
+  - target:
+      entity_id: "{% if is_state('input_select.vrsta_zvona_zdravomarija_navecer',
+        'MUŠKO') %}\n  switch.sonoff_100132ebac_1\n{% else %}\n  switch.sonoff_100132ebac_2\n{%
+        endif %}\n"
+    action: switch.turn_on
+  - delay:
+      minutes: '{{ states(''input_number.zdravomarija_uvecer_duljina'') | int }}'
+  - target:
+      entity_id: "{% if is_state('input_select.vrsta_zvona_zdravomarija_navecer',
+        'MUŠKO') %}\n  switch.sonoff_100132ebac_1\n{% else %}\n  switch.sonoff_100132ebac_2\n{%
+        endif %}\n"
+    action: switch.turn_off
+  mode: single
+- id: '1749632306378'
+  alias: SLAVLJENJE - nakon zdravomarije (20.-28. lipnja)
+  triggers:
+  - seconds: /30
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automatika_zdravomarije_navecer
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.slavljenje_aktivirano
+    state: 'off'
+  - condition: template
+    value_template: '{{ now().month == 6 and now().day >= 20 and now().day <= 28 }}
+
+      '
+  - condition: template
+    value_template: '{% set misa_str = states(''input_select.vrijeme_dnevne_mise'')
+      %} {% set misa = strptime(misa_str, ''%H:%M'') %} {% set zalaz10_str = states(''sensor.zalaz10'')
+      %} {% set zalaz10 = strptime(zalaz10_str, ''%H:%M'') %} {% set diff = ((zalaz10
+      | as_datetime) - (misa | as_datetime)).total_seconds() / 60 %} {% set zdravo
+      = zalaz10 if diff >= 40 else misa + timedelta(minutes=40) %} {% set slavljenje
+      = (zdravo | as_datetime + timedelta(minutes=4)).time() %} {{ now().strftime(''%H:%M'')
+      == slavljenje.strftime(''%H:%M'') }}
+
+      '
+  actions:
+  - target:
+      entity_id: switch.sonoff_100132ebac_3
+    action: switch.turn_on
+  - target:
+      entity_id: input_boolean.slavljenje_aktivirano
+    action: input_boolean.turn_on
+  - delay: 00:02:00
+  - target:
+      entity_id: switch.sonoff_100132ebac_3
+    action: switch.turn_off
+  mode: single
+- id: '1749756903717'
+  alias: Reset oznake "dnevna misa već zvonilo"
+  triggers:
+  - at: 00:00:01
+    trigger: time
+  actions:
+  - target:
+      entity_id: input_boolean.dnevna_misa_vec_zvonilo
+    action: input_boolean.turn_off
+  mode: single
+- id: '1749759613282'
+  alias: Zvona - dnevna misa
+  description: ''
+  triggers:
+  - minutes: /1
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: input_boolean.auto_zvona_za_misu
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.dnevna_misa_vec_zvonilo
+    state: 'off'
+  - condition: template
+    value_template: '{{ states(''input_select.vrsta_dnevne_mise'') == ''Obična dnevna
+      misa'' }}'
+  - condition: time
+    after: 05:00:00
+    before: '22:00:00'
+  - condition: template
+    value_template: '{{ now().weekday() != 6 }}'
+  - condition: template
+    value_template: "{% set vrijeme_str = states('input_select.vrijeme_dnevne_mise')
+      %} {% if vrijeme_str == 'Nema mise' or ':' not in vrijeme_str %}\n  false\n{%
+      else %}\n  {% set misa = strptime(vrijeme_str, '%H:%M') %}\n  {% set sada =
+      now() %}\n  {% set aktivacija = misa - timedelta(minutes=30) %}\n  {{ sada.hour
+      == aktivacija.hour and sada.minute == aktivacija.minute }}\n{% endif %}\n"
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ states(''input_select.vrijeme_dnevne_mise'')[-2:] == ''30''
+          }}'
+      sequence:
+      - delay: 00:00:30
+    - conditions:
+      - condition: template
+        value_template: '{{ states(''input_select.vrijeme_dnevne_mise'')[-2:] == ''00''
+          }}'
+      sequence:
+      - delay: 00:00:05
+  - variables:
+      trajanje: '{{ states(''input_number.zvona_obicna_dnevna_duljina'') | float }}'
+      tip_zvona: '{{ states(''input_select.vrsta_zvona_obicna_dnevna_misa'') }}'
+      trajanje_musko: "{% if trajanje == 0.5 %}\n  15\n{% else %}\n  {{ (trajanje
+        * 60 - 30) | int }}\n{% endif %}\n"
+      trajanje_zensko: '{{ (trajanje * 60) | int }}'
+  - choose:
+    - conditions: '{{ tip_zvona == ''MUŠKO'' }}'
+      sequence:
+      - target:
+          entity_id: switch.sonoff_100132ebac_1
+        action: switch.turn_on
+      - delay:
+          seconds: '{{ trajanje_musko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_1
+        action: switch.turn_off
+    - conditions: '{{ tip_zvona == ''ŽENSKO'' }}'
+      sequence:
+      - target:
+          entity_id: switch.sonoff_100132ebac_2
+        action: switch.turn_on
+      - delay:
+          seconds: '{{ trajanje_zensko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_2
+        action: switch.turn_off
+    - conditions: '{{ tip_zvona == ''OBA'' }}'
+      sequence:
+      - target:
+          entity_id:
+          - switch.sonoff_100132ebac_1
+          - switch.sonoff_100132ebac_2
+        action: switch.turn_on
+      - delay:
+          seconds: '{{ trajanje_musko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_1
+        action: switch.turn_off
+      - delay:
+          seconds: '{{ trajanje_zensko - trajanje_musko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_2
+        action: switch.turn_off
+  - target:
+      entity_id: input_boolean.dnevna_misa_vec_zvonilo
+    action: input_boolean.turn_on
+  mode: single
+- id: '1749765474784'
+  alias: Vanjska rasvjeta - uključenje navečer
+  description: Upali vanjsku rasvjetu 20 minuta nakon zalaska sunca
+  triggers:
+  - event: sunset
+    offset: +00:20:00
+    trigger: sun
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automat_vanjska_rasvjeta
+    state: 'on'
+  actions:
+  - action: switch.turn_on
+    data: {}
+    target:
+      entity_id:
+      - switch.crkva_ulaz_switch_1
+      - switch.mrtvacnica2
+  mode: single
+- id: '1749765569496'
+  alias: Vanjska rasvjeta - gašenje ujutro
+  description: Ugasi vanjsku rasvjetu 20 minuta prije izlaska sunca
+  triggers:
+  - event: sunrise
+    offset: -00:20:00
+    trigger: sun
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automat_vanjska_rasvjeta
+    state: 'on'
+  actions:
+  - action: switch.turn_off
+    data: {}
+    target:
+      entity_id:
+      - switch.crkva_ulaz_switch_1
+      - switch.mrtvacnica2
+  mode: single
+- id: '1749999715417'
+  alias: Zvona – misa na svetkovinu
+  description: ''
+  triggers:
+  - minutes: /1
+    trigger: time_pattern
+  conditions:
+  - condition: template
+    value_template: '{{ states(''input_select.vrsta_dnevne_mise'') == ''Svetkovina''
+      }}'
+  - condition: state
+    entity_id: input_boolean.dnevna_misa_vec_zvonilo
+    state: 'off'
+  - condition: template
+    value_template: '{{ now().weekday() != 6 }}'
+  - condition: template
+    value_template: "{% set vrijeme_str = states('input_select.vrijeme_dnevne_mise')
+      %} {% if not vrijeme_str or ':' not in vrijeme_str %}\n  false\n{% else %}\n
+      \ {% set misa = strptime(vrijeme_str, '%H:%M') %}\n  {% set sada = now() %}\n
+      \ {% set aktivacija1 = misa - timedelta(hours=2) %}\n  {% set aktivacija2 =
+      misa - timedelta(hours=1) %}\n  {{ sada.hour == aktivacija1.hour and sada.minute
+      == aktivacija1.minute or\n     sada.hour == aktivacija2.hour and sada.minute
+      == aktivacija2.minute }}\n{% endif %}\n"
+  actions:
+  - delay: 00:00:30
+  - variables:
+      trajanje: '{{ states(''input_number.zvona_svetkovina_duljina'') | float }}'
+      tip_zvona: '{{ states(''input_select.vrsta_zvona_svetkovina'') }}'
+      trajanje_musko: "{% if trajanje == 0.5 %}\n  15\n{% else %}\n  {{ (trajanje
+        * 60 - 30) | int }}\n{% endif %}\n"
+      trajanje_zensko: '{{ (trajanje * 60) | int }}'
+      vrijeme_str: '{{ states(''input_select.vrijeme_dnevne_mise'') }}'
+      aktivacija2_now: "{% if vrijeme_str and ':' in vrijeme_str %}\n  {% set misa
+        = strptime(vrijeme_str, '%H:%M') %}\n  {% set sada = now() %}\n  {% set aktivacija2
+        = misa - timedelta(hours=1) %}\n  {{ sada.hour == aktivacija2.hour and sada.minute
+        == aktivacija2.minute }}\n{% else %}\n  false\n{% endif %}\n"
+  - choose:
+    - conditions: '{{ tip_zvona == ''MUŠKO'' }}'
+      sequence:
+      - target:
+          entity_id: switch.sonoff_100132ebac_1
+        action: switch.turn_on
+      - delay:
+          seconds: '{{ trajanje_musko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_1
+        action: switch.turn_off
+    - conditions: '{{ tip_zvona == ''ŽENSKO'' }}'
+      sequence:
+      - target:
+          entity_id: switch.sonoff_100132ebac_2
+        action: switch.turn_on
+      - delay:
+          seconds: '{{ trajanje_zensko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_2
+        action: switch.turn_off
+    - conditions: '{{ tip_zvona == ''OBA'' }}'
+      sequence:
+      - target:
+          entity_id:
+          - switch.sonoff_100132ebac_1
+          - switch.sonoff_100132ebac_2
+        action: switch.turn_on
+      - delay:
+          seconds: '{{ trajanje_musko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_1
+        action: switch.turn_off
+      - delay:
+          seconds: '{{ trajanje_zensko - trajanje_musko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_2
+        action: switch.turn_off
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ aktivacija2_now }}'
+      sequence:
+      - target:
+          entity_id: input_boolean.dnevna_misa_vec_zvonilo
+        action: input_boolean.turn_on
+      - target:
+          entity_id: input_select.vrsta_dnevne_mise
+        data:
+          option: Obična dnevna misa
+        action: input_select.select_option
+  mode: single
+- id: '1749999735184'
+  alias: Zvona – misa na blagdan
+  triggers:
+  - minutes: /1
+    trigger: time_pattern
+  conditions:
+  - condition: template
+    value_template: '{{ states(''input_select.vrsta_dnevne_mise'') == ''Blagdan''
+      }}'
+  - condition: state
+    entity_id: input_boolean.dnevna_misa_vec_zvonilo
+    state: 'off'
+  - condition: template
+    value_template: '{{ now().weekday() != 6 }}'
+  - condition: time
+    after: 05:00:00
+    before: '22:00:00'
+  - condition: template
+    value_template: "{% set vrijeme_str = states('input_select.vrijeme_dnevne_mise')
+      %} {% if not vrijeme_str or 'Nema' in vrijeme_str or ':' not in vrijeme_str
+      %}\n  false\n{% else %}\n  {% set misa = strptime(vrijeme_str, '%H:%M') %}\n
+      \ {% if misa is none %}\n    false\n  {% else %}\n    {% set sada = now() %}\n
+      \   {% set aktivacija = misa - timedelta(minutes=30) %}\n    {{ sada.hour ==
+      aktivacija.hour and sada.minute == aktivacija.minute }}\n  {% endif %}\n{% endif
+      %}\n"
+  actions:
+  - delay: 00:00:30
+  - variables:
+      trajanje: '{{ states(''input_number.zvona_blagdan_duljina'') | float }}'
+      tip_zvona: '{{ states(''input_select.vrsta_zvona_blagdan'') }}'
+      trajanje_musko: "{% if trajanje == 0.5 %}\n  15\n{% else %}\n  {{ (trajanje
+        * 60 - 30) | int }}\n{% endif %}\n"
+      trajanje_zensko: '{{ (trajanje * 60) | int }}'
+  - choose:
+    - conditions: '{{ tip_zvona == ''MUŠKO'' }}'
+      sequence:
+      - target:
+          entity_id: switch.sonoff_100132ebac_1
+        action: switch.turn_on
+      - delay:
+          seconds: '{{ trajanje_musko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_1
+        action: switch.turn_off
+    - conditions: '{{ tip_zvona == ''ŽENSKO'' }}'
+      sequence:
+      - target:
+          entity_id: switch.sonoff_100132ebac_2
+        action: switch.turn_on
+      - delay:
+          seconds: '{{ trajanje_zensko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_2
+        action: switch.turn_off
+    - conditions: '{{ tip_zvona == ''OBA'' }}'
+      sequence:
+      - target:
+          entity_id:
+          - switch.sonoff_100132ebac_1
+          - switch.sonoff_100132ebac_2
+        action: switch.turn_on
+      - delay:
+          seconds: '{{ trajanje_musko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_1
+        action: switch.turn_off
+      - delay:
+          seconds: '{{ trajanje_zensko - trajanje_musko }}'
+      - target:
+          entity_id: switch.sonoff_100132ebac_2
+        action: switch.turn_off
+  - target:
+      entity_id: input_boolean.dnevna_misa_vec_zvonilo
+    action: input_boolean.turn_on
+  - target:
+      entity_id: input_select.vrsta_dnevne_mise
+    data:
+      option: Obična dnevna misa
+    action: input_select.select_option
+  mode: single
+- id: '1750000406109'
+  alias: Zvona – nedjeljna večernja misa
+  description: ''
+  triggers:
+  - minutes: /1
+    trigger: time_pattern
+  conditions:
+  - condition: template
+    value_template: '{{ now().weekday() == 6 }}'
+  - condition: template
+    value_template: '{{ states(''input_select.vrijeme_nedjeljne_vecernje_mise'') !=
+      ''Nema mise'' }}
+
+      '
+  - condition: template
+    value_template: "{% set vrijeme_str = states('input_select.vrijeme_nedjeljne_vecernje_mise')
+      %} {% if not vrijeme_str or ':' not in vrijeme_str %}\n  false\n{% else %}\n
+      \ {% set misa = strptime(vrijeme_str, '%H:%M') %}\n  {% set sada = now() %}\n
+      \ {% set aktivacija = misa - timedelta(minutes=30) %}\n  {{ sada.hour == aktivacija.hour
+      and sada.minute == aktivacija.minute }}\n{% endif %}\n"
+  actions:
+  - delay: 00:00:30
+  - target:
+      entity_id:
+      - switch.sonoff_100132ebac_1
+      - switch.sonoff_100132ebac_2
+    action: switch.turn_on
+  - delay: 00:01:30
+  - target:
+      entity_id: switch.sonoff_100132ebac_1
+    action: switch.turn_off
+  - delay: 00:00:30
+  - target:
+      entity_id: switch.sonoff_100132ebac_2
+    action: switch.turn_off
+  mode: single
+- id: '1750093278085'
+  alias: Dummy log zapis - svakih 2 sata
+  description: Upisuje poruku u log svakih 2 sata radi watchdog nadzora
+  triggers:
+  - hours: /2
+    trigger: time_pattern
+  conditions: []
+  actions:
+  - data:
+      message: 'Rato: HA je aktivan - {{ now() }}'
+      level: info
+    action: system_log.write
+  mode: single
+- id: '1750347849113'
+  alias: HLAĐENJE CRKVE - RUČNO
+  description: Pokreće hlađenje samo na onim klimama za koje je uključeno odgovarajuće
+    input_boolean stanje
+  triggers:
+  - entity_id: input_boolean.rucno_hladenje
+    to: 'on'
+    trigger: state
+  actions:
+  - data:
+      message: Automatizacija RUČNOG hlađenja crkve se pokrenula u {{ now() }}
+      level: info
+    action: system_log.write
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_1
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b8c89e
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b8c89e
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_2
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b8c8a4
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b8c8a4
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_3
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b8c92a
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b8c92a
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_4
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8b87ea5
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8b87ea5
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_crkva_5
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.9424b8698184
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.9424b8698184
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_crkva'') | float
+          }}'
+      action: climate.set_temperature
+  - if:
+    - condition: state
+      entity_id: input_boolean.koristi_klimu_sakristija
+      state: 'on'
+    then:
+    - target:
+        entity_id: climate.c039370a331f
+      data:
+        hvac_mode: cool
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.c039370a331f
+      data:
+        temperature: '{{ states(''input_number.klima_temp_hladjenje_sakristija'')
+          | float }}'
+      action: climate.set_temperature
+  - delay: 05:00:00
+  - target:
+      entity_id:
+      - climate.9424b8b8c89e
+      - climate.9424b8b8c8a4
+      - climate.9424b8b8c92a
+      - climate.9424b8b87ea5
+      - climate.9424b8698184
+      - climate.c039370a331f
+    action: climate.turn_off
+  - target:
+      entity_id: input_boolean.rucno_hladenje
+    action: input_boolean.turn_off
+  mode: restart
+- id: '1750447275419'
+  alias: Reset slavljenja svake noći
+  description: ''
+  triggers:
+  - at: 00:00:02
+    trigger: time
+  actions:
+  - target:
+      entity_id: input_boolean.slavljenje_aktivirano
+    action: input_boolean.turn_off
+  mode: single
+- id: '1750449587936'
+  alias: SLAVLJENJE - podne (21.-28. lipnja)
+  description: ''
+  triggers:
+  - at: '12:04:00'
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automatika_podne
+    state: 'on'
+  - condition: template
+    value_template: '{{ now().month == 6 and now().day >= 21 and now().day <= 28 }}
+
+      '
+  actions:
+  - target:
+      entity_id: switch.sonoff_100132ebac_3
+    action: switch.turn_on
+  - delay: 00:01:00
+  - target:
+      entity_id: switch.sonoff_100132ebac_3
+    action: switch.turn_off
+  mode: single
+- id: '1750450247129'
+  alias: PODNE - svaki dan (osim kad je misa u 11:00 ili 11:30)
+  description: ''
+  triggers:
+  - at: '12:00:30'
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automatika_podne
+    state: 'on'
+  - condition: template
+    value_template: "{% set danas = now().weekday() %} {% if danas == 6 %}\n  {{ states('input_select.vrijeme_nedjeljne_jutarnje_mise')
+      not in ['11:00', '11:30'] }}\n{% else %}\n  {{ states('input_select.vrijeme_dnevne_mise')
+      not in ['11:00', '11:30'] }}\n{% endif %}\n"
+  actions:
+  - target:
+      entity_id: "{% if is_state('input_select.podne_zvono', 'MUŠKO') %}\n  switch.sonoff_100132ebac_1\n{%
+        else %}\n  switch.sonoff_100132ebac_2\n{% endif %}\n"
+    action: switch.turn_on
+  - delay:
+      minutes: '{{ states(''input_number.podne_duljina'') | int }}'
+  - target:
+      entity_id: "{% if is_state('input_select.podne_zvono', 'MUŠKO') %}\n  switch.sonoff_100132ebac_1\n{%
+        else %}\n  switch.sonoff_100132ebac_2\n{% endif %}\n"
+    action: switch.turn_off
+  mode: single
+- id: '1750628456123'
+  alias: Zvona - nedjeljna jutarnja misa
+  description: Zvonjenje 2h i 1h prije nedjeljne jutarnje mise
+  triggers:
+  - minutes: /1
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: input_boolean.auto_zvona_za_misu
+    state: 'on'
+  - condition: template
+    value_template: '{{ now().weekday() == 6 }}'
+  - condition: state
+    entity_id: input_boolean.nedjeljna_misa_vec_zvonilo
+    state: 'off'
+  - condition: template
+    value_template: "{% set vrijeme_str = states('input_select.vrijeme_nedjeljne_jutarnje_mise')
+      %} {% if not vrijeme_str or ':' not in vrijeme_str %}\n  false\n{% else %}\n
+      \ {% set misa = strptime(vrijeme_str, '%H:%M') %}\n  {% set sada = now() %}\n
+      \ {% set aktivacija1 = misa - timedelta(hours=2) %}\n  {% set aktivacija2 =
+      misa - timedelta(hours=1) %}\n  {{ sada.hour == aktivacija1.hour and sada.minute
+      == aktivacija1.minute or\n     sada.hour == aktivacija2.hour and sada.minute
+      == aktivacija2.minute }}\n{% endif %}\n"
+  actions:
+  - delay: 00:00:30
+  - target:
+      entity_id:
+      - switch.sonoff_100132ebac_1
+      - switch.sonoff_100132ebac_2
+    action: switch.turn_on
+  - delay: 00:01:30
+  - target:
+      entity_id: switch.sonoff_100132ebac_1
+    action: switch.turn_off
+  - delay: 00:00:30
+  - target:
+      entity_id: switch.sonoff_100132ebac_2
+    action: switch.turn_off
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ aktivacija2_now }}'
+      sequence:
+      - target:
+          entity_id: input_boolean.nedjeljna_misa_vec_zvonilo
+        action: input_boolean.turn_on
+  variables:
+    aktivacija2_now: "{% set vrijeme_str = states('input_select.vrijeme_nedjeljne_jutarnje_mise')
+      %} {% if vrijeme_str and ':' in vrijeme_str %}\n  {% set misa = strptime(vrijeme_str,
+      '%H:%M') %}\n  {% set sada = now() %}\n  {% set aktivacija2 = misa - timedelta(hours=1)
+      %}\n  {{ sada.hour == aktivacija2.hour and sada.minute == aktivacija2.minute
+      }}\n{% else %}\n  false\n{% endif %}\n"
+  mode: single
+- id: '1750628657373'
+  alias: Reset nedjeljna_misa_vec_zvonilo
+  description: ''
+  triggers:
+  - at: 02:00:00
+    trigger: time
+  conditions:
+  - condition: template
+    value_template: '{{ now().weekday() == 6 }}'
+  actions:
+  - target:
+      entity_id: input_boolean.nedjeljna_misa_vec_zvonilo
+    action: input_boolean.turn_off
+  mode: single
+- id: '1750631006476'
+  alias: Resetiraj ručna zvonjenja u ponoć
+  description: ''
+  triggers:
+  - at: 00:00:00
+    trigger: time
+  actions:
+  - target:
+      entity_id:
+      - input_datetime.rucno_zvonjenje_termin_1
+      - input_datetime.rucno_zvonjenje_termin_2
+      - input_datetime.rucno_zvonjenje_termin_3
+    data:
+      date: '{{ danasnji_datum }}'
+      time: 00:00:00
+    action: input_datetime.set_datetime
+  - target:
+      entity_id: input_boolean.rucno_zvonjenje_aktivno
+    action: input_boolean.turn_off
+  variables:
+    danasnji_datum: '{{ now().date() }}'
+  mode: single
+- id: '1751383398695'
+  alias: Automatsko čišćenje baze (recorder.purge)
+  description: Pokreće se utorkom u 03:30 i briše podatke starije od 7 dana te repakira
+    bazu
+  triggers:
+  - at: 03:30:00
+    trigger: time
+  conditions:
+  - condition: time
+    weekday:
+    - tue
+  actions:
+  - data:
+      keep_days: 7
+      repack: true
+    action: recorder.purge
+  mode: single
+- id: '1751486934700'
+  alias: Zvona - Zdravomarija ujutro
+  description: ''
+  triggers:
+  - value_template: '{% set vrijeme = states(''input_datetime.vrijeme_zdravomarije_ujutro'')[:5]
+      %} {{ now().strftime(''%H:%M'') == vrijeme }}
+
+      '
+    trigger: template
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automatika_zdravomarije_ujutro
+    state: 'on'
+  - condition: template
+    value_template: "{% set vrijeme = states('input_datetime.vrijeme_zdravomarije_ujutro')
+      %} {% if not vrijeme %}\n  false\n{% else %}\n  {% set h = vrijeme[0:2] | int
+      %}\n  {% set m = vrijeme[3:5] | int %}\n  {{ h >= 4 and (h > 4 or m >= 30) and
+      (h < 8 or (h == 8 and m == 0)) }}\n{% endif %}\n"
+  actions:
+  - variables:
+      delay_seconds: "{% set m = states('input_datetime.vrijeme_zdravomarije_ujutro')[3:5]
+        | int %} {% if m == 0 %}\n  30\n{% elif m == 30 %}\n  5\n{% else %}\n  0\n{%
+        endif %}\n"
+      zvono_entity: "{% set vrsta = states('input_select.vrsta_zvona_zdravomarija_ujutro')
+        %} {% if vrsta == 'Muško' %}\n  switch.sonoff_100132ebac_1\n{% else %}\n  switch.sonoff_100132ebac_2\n{%
+        endif %}\n"
+      trajanje: '{% set trajanje_min = states(''input_number.zdravomarija_ujutro_duljina'')
+        | float %} {% set vrsta = states(''input_select.vrsta_zvona_zdravomarija_ujutro'')
+        %} {% set umanjenje = 0.5 if vrsta == ''Muško'' else 0.25 %} {% set stvarno
+        = trajanje_min - umanjenje %} {% set min = stvarno | int %} {% set sek = ((stvarno
+        - min) * 60) | round(0) | int %} {{ "%02d:%02d:%02d" | format(0, min, sek)
+        }}
+
+        '
+  - delay:
+      seconds: '{{ delay_seconds }}'
+  - target:
+      entity_id: '{{ zvono_entity }}'
+    action: switch.turn_on
+  - delay: '{{ trajanje }}'
+  - target:
+      entity_id: '{{ zvono_entity }}'
+    action: switch.turn_off
+  mode: single

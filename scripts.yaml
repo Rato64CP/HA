@@ -1,0 +1,98 @@
+nova_skripta:
+  sequence:
+  - target:
+      entity_id: switch.sonoff_100132ebac_1
+    action: switch.turn_on
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 15
+      milliseconds: 0
+  - target:
+      entity_id: switch.sonoff_100132ebac_1
+    action: switch.turn_off
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 25
+      milliseconds: 0
+  - target:
+      entity_id: switch.sonoff_100132ebac_4
+    action: switch.turn_on
+    data: {}
+  - delay: 00:10:00
+  - target:
+      entity_id: switch.sonoff_100132ebac_4
+    action: switch.turn_off
+    data: {}
+  mode: single
+  alias: Najava musko
+  description: ''
+najava_zensko:
+  alias: Najava zensko
+  description: ''
+  mode: single
+  sequence:
+  - target:
+      entity_id: switch.sonoff_100132ebac_2
+    action: switch.turn_on
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 15
+      milliseconds: 0
+  - target:
+      entity_id: switch.sonoff_100132ebac_2
+    action: switch.turn_off
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 5
+      milliseconds: 0
+  - target:
+      entity_id: switch.sonoff_100132ebac_4
+    action: switch.turn_on
+    data: {}
+  - delay: 00:10:00
+  - target:
+      entity_id: switch.sonoff_100132ebac_4
+    action: switch.turn_off
+    data: {}
+klime_crkva_off:
+  alias: Klime crkva OFF / deblokiraj
+  sequence:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.blokiraj_automatsko_hladenje
+        state: 'off'
+      sequence:
+      - target:
+          entity_id:
+          - climate.9424b8b8c89e
+          - climate.9424b8b8c8a4
+          - climate.9424b8b8c92a
+          - climate.9424b8b87ea5
+          - climate.9424b8698184
+          - climate.c039370a331f
+        action: climate.turn_off
+      - target:
+          entity_id: input_boolean.blokiraj_automatsko_hladenje
+        action: input_boolean.turn_on
+      - delay: 02:00:00
+      - target:
+          entity_id: input_boolean.blokiraj_automatsko_hladenje
+        action: input_boolean.turn_off
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.blokiraj_automatsko_hladenje
+        state: 'on'
+      sequence:
+      - target:
+          entity_id: input_boolean.blokiraj_automatsko_hladenje
+        action: input_boolean.turn_off
+  mode: restart

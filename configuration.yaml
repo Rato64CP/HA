@@ -1,0 +1,34 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+logger:
+  default: warning
+  logs:
+    homeassistant.core: info
+    homeassistant.components.system_log.external: info
+    greeclimate.network: error
+
+recorder:
+  purge_keep_days: 7
+  auto_purge: true
+  commit_interval: 30
+  exclude:
+    domains:
+      - updater
+      - weather
+      - update
+      - zone
+      - person
+      - conversation
+    entities:
+      - sensor.time
+      - sensor.date

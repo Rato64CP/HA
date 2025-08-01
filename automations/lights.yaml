@@ -1,0 +1,38 @@
+- id: '1749765474784'
+  alias: Vanjska rasvjeta - uključenje navečer
+  description: Upali vanjsku rasvjetu 20 minuta nakon zalaska sunca
+  triggers:
+  - event: sunset
+    offset: +00:20:00
+    trigger: sun
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automat_vanjska_rasvjeta
+    state: 'on'
+  actions:
+  - action: switch.turn_on
+    data: {}
+    target:
+      entity_id:
+      - switch.crkva_ulaz_switch_1
+      - switch.mrtvacnica2
+  mode: single
+- id: '1749765569496'
+  alias: Vanjska rasvjeta - gašenje ujutro
+  description: Ugasi vanjsku rasvjetu 20 minuta prije izlaska sunca
+  triggers:
+  - event: sunrise
+    offset: -00:20:00
+    trigger: sun
+  conditions:
+  - condition: state
+    entity_id: input_boolean.automat_vanjska_rasvjeta
+    state: 'on'
+  actions:
+  - action: switch.turn_off
+    data: {}
+    target:
+      entity_id:
+      - switch.crkva_ulaz_switch_1
+      - switch.mrtvacnica2
+  mode: single

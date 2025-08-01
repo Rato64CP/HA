@@ -1,0 +1,30 @@
+- id: '1750093278085'
+  alias: Dummy log zapis - svakih 2 sata
+  description: Upisuje poruku u log svakih 2 sata radi watchdog nadzora
+  triggers:
+  - hours: /2
+    trigger: time_pattern
+  conditions: []
+  actions:
+  - data:
+      message: 'Rato: HA je aktivan - {{ now() }}'
+      level: info
+    action: system_log.write
+  mode: single
+- id: '1751383398695'
+  alias: Automatsko čišćenje baze (recorder.purge)
+  description: Pokreće se utorkom u 03:30 i briše podatke starije od 7 dana te repakira
+    bazu
+  triggers:
+  - at: 03:30:00
+    trigger: time
+  conditions:
+  - condition: time
+    weekday:
+    - tue
+  actions:
+  - data:
+      keep_days: 7
+      repack: true
+    action: recorder.purge
+  mode: single

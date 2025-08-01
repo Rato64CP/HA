@@ -1,0 +1,99 @@
+---
+blueprint:
+  name: Ring Church Bells
+  description: >-
+    Script for ringing church bells. Choose the bell type (male,
+    female or both) and duration. Useful for reusing the same
+    ringing logic across automations.
+  domain: script
+  author: Codex
+  input:
+    male_bell:
+      name: Male bell switch
+      selector:
+        entity:
+          domain: switch
+    female_bell:
+      name: Female bell switch
+      selector:
+        entity:
+          domain: switch
+    bell_type:
+      name: Bell type
+      default: MUŠKO
+      selector:
+        select:
+          options:
+            - MUŠKO
+            - ŽENSKO
+            - OBA
+    duration_minutes:
+      name: Duration in minutes
+      default: 1
+      selector:
+        number:
+          min: 0.5
+          max: 5
+          step: 0.5
+    pre_delay:
+      name: Pre-ring delay (seconds)
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 1
+
+mode: single
+
+sequence:
+  - delay:
+      seconds: !input pre_delay
+  - variables:
+      bell_type: !input bell_type
+      duration: !input duration_minutes
+      male_seconds: >-
+        {% if duration | float == 0.5 %}
+          15
+        {% else %}
+          {{ (duration | float * 60 - 30) | int }}
+        {% endif %}
+      female_seconds: "{{ (duration | float * 60) | int }}"
+  - choose:
+      - conditions: "{{ bell_type == 'MUŠKO' }}"
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input male_bell
+          - delay:
+              seconds: "{{ male_seconds }}"
+          - service: switch.turn_off
+            target:
+              entity_id: !input male_bell
+      - conditions: "{{ bell_type == 'ŽENSKO' }}"
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input female_bell
+          - delay:
+              seconds: "{{ female_seconds }}"
+          - service: switch.turn_off
+            target:
+              entity_id: !input female_bell
+      - conditions: "{{ bell_type == 'OBA' }}"
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id:
+                - !input male_bell
+                - !input female_bell
+          - delay:
+              seconds: "{{ male_seconds }}"
+          - service: switch.turn_off
+            target:
+              entity_id: !input male_bell
+          - delay:
+              seconds: "{{ female_seconds - male_seconds }}"
+          - service: switch.turn_off
+            target:
+              entity_id: !input female_bell

@@ -1,0 +1,70 @@
+---
+blueprint:
+  name: Multi Climate HVAC Control
+  description: >-
+    Control multiple climate devices by setting HVAC mode and temperature
+    if their corresponding enable booleans are on. Useful for grouping
+    repeated cooling or heating actions across automations.
+  domain: script
+  author: Codex
+  input:
+    climate_config:
+      name: Climate configuration list
+      description: |
+        Provide a list of objects describing each climate device. Each entry
+        needs the keys `climate` and `enabled`. Optionally `temp_entity` can
+        point to an entity whose state will be used as temperature. Example:
+        - climate: climate.living_room
+          enabled: input_boolean.use_living_room_ac
+          temp_entity: input_number.temp_living_room
+      default: []
+      selector:
+        object:
+    hvac_mode:
+      name: HVAC Mode
+      default: cool
+      selector:
+        select:
+          options:
+            - cool
+            - heat
+            - auto
+    default_temp:
+      name: Default Temperature
+      description: Temperature used if `temp_entity` is omitted.
+      default: 24
+      selector:
+        number:
+          min: 16
+          max: 30
+          step: 0.5
+
+mode: single
+
+sequence:
+  - variables:
+      hvac: !input hvac_mode
+      fallback_temp: !input default_temp
+  - repeat:
+      for_each: !input climate_config
+      sequence:
+        - if:
+            - condition: state
+              entity_id: "{{ repeat.item.enabled }}"
+              state: 'on'
+          then:
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: "{{ repeat.item.climate }}"
+              data:
+                hvac_mode: "{{ hvac }}"
+            - service: climate.set_temperature
+              target:
+                entity_id: "{{ repeat.item.climate }}"
+              data:
+                temperature: >-
+                  {% if repeat.item.temp_entity is defined %}
+                    {{ states(repeat.item.temp_entity) | float }}
+                  {% else %}
+                    {{ fallback_temp }}
+                  {% endif %}

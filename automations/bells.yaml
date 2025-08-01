@@ -645,28 +645,6 @@
       \ int %}\n  {% set m = vrijeme[3:5] | int %}\n  {{ h >= 4 and (h > 4 or m >=\
       \ 30) and (h < 8 or (h == 8 and m == 0)) }}\n{% endif %}\n"
   actions:
-  - variables:
-      delay_seconds: "{% set m = states('input_datetime.vrijeme_zdravomarije_ujutro')[3:5]\
-        \ | int %} {% if m == 0 %}\n  30\n{% elif m == 30 %}\n  5\n{% else %}\n  0\n\
-        {% endif %}\n"
-      zvono_entity: "{% set vrsta = states('input_select.vrsta_zvona_zdravomarija_ujutro')\
-        \ %} {% if vrsta == 'Muško' %}\n  switch.sonoff_100132ebac_1\n{% else %}\n\
-        \  switch.sonoff_100132ebac_2\n{% endif %}\n"
-      trajanje: '{% set trajanje_min = states(''input_number.zdravomarija_ujutro_duljina'')
-        | float %} {% set vrsta = states(''input_select.vrsta_zvona_zdravomarija_ujutro'')
-        %} {% set umanjenje = 0.5 if vrsta == ''Muško'' else 0.25 %} {% set stvarno
-        = trajanje_min - umanjenje %} {% set min = stvarno | int %} {% set sek = ((stvarno
-        - min) * 60) | round(0) | int %} {{ "%02d:%02d:%02d" | format(0, min, sek)
-        }}
-
-        '
-  - delay:
-      seconds: '{{ delay_seconds }}'
-  - target:
-      entity_id: '{{ zvono_entity }}'
-    action: switch.turn_on
-  - delay: '{{ trajanje }}'
-  - target:
-      entity_id: '{{ zvono_entity }}'
-    action: switch.turn_off
+    - service: script.zvona_zdravomarija_ujutro
+    data: {}
   mode: single

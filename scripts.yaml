@@ -96,3 +96,29 @@ klime_crkva_off:
           entity_id: input_boolean.blokiraj_automatsko_hladenje
         action: input_boolean.turn_off
   mode: restart
+zvona_zdravomarija_ujutro:
+  alias: Zvona - Zdravomarija ujutro blueprint
+  mode: single
+  use_blueprint:
+    path: homeassistant/ring_bells.yaml
+    input:
+      male_bell: switch.sonoff_100132ebac_1
+      female_bell: switch.sonoff_100132ebac_2
+      bell_type: >
+        {% if states('input_select.vrsta_zvona_zdravomarija_ujutro') == 'Muško' %}
+          MUŠKO
+        {% else %}
+          ŽENSKO
+        {% endif %}
+      duration_minutes: >
+        {{ states('input_number.zdravomarija_ujutro_duljina') | float }}
+      pre_delay: >
+        {% set m = states('input_datetime.vrijeme_zdravomarije_ujutro')[3:5] | int %}
+        {% if m == 0 %}
+          30
+        {% elif m == 30 %}
+          5
+        {% else %}
+          0
+        {% endif %}
+

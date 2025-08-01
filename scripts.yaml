@@ -122,3 +122,31 @@ zvona_zdravomarija_ujutro:
           0
         {% endif %}
 
+hladjenje_crkve_blueprint:
+  alias: Hlađenje crkve - blueprint
+  mode: single
+  use_blueprint:
+    path: homeassistant/multi_climate_hvac.yaml
+    input:
+      hvac_mode: cool
+      default_temp: 24
+      climate_config:
+        - climate: climate.9424b8b8c89e
+          enabled: input_boolean.koristi_klimu_crkva_1
+          temp_entity: input_number.klima_temp_hladjenje_crkva
+        - climate: climate.9424b8b8c8a4
+          enabled: input_boolean.koristi_klimu_crkva_2
+          temp_entity: input_number.klima_temp_hladjenje_crkva
+        - climate: climate.9424b8b8c92a
+          enabled: input_boolean.koristi_klimu_crkva_3
+          temp_entity: input_number.klima_temp_hladjenje_crkva
+        - climate: climate.9424b8b87ea5
+          enabled: input_boolean.koristi_klimu_crkva_4
+          temp_entity: input_number.klima_temp_hladjenje_crkva
+        - climate: climate.9424b8698184
+          enabled: input_boolean.koristi_klimu_crkva_5
+          temp_entity: input_number.klima_temp_hladjenje_crkva
+        - climate: climate.c039370a331f
+          enabled: input_boolean.koristi_klimu_sakristija
+          temp_entity: input_number.klima_temp_hladjenje_sakristija
+

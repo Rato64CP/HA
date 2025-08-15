@@ -96,57 +96,231 @@ klime_crkva_off:
           entity_id: input_boolean.blokiraj_automatsko_hladenje
         action: input_boolean.turn_off
   mode: restart
-zvona_zdravomarija_ujutro:
-  alias: Zvona - Zdravomarija ujutro blueprint
+kazaljke_impuls_poz_6_s:
+  alias: Kazaljke – impuls POZ (6 s)
   mode: single
-  use_blueprint:
-    path: homeassistant/ring_bells.yaml
-    input:
-      male_bell: switch.sonoff_100132ebac_1
-      female_bell: switch.sonoff_100132ebac_2
-      bell_type: >
-        {% if states('input_select.vrsta_zvona_zdravomarija_ujutro') == 'Muško' %}
-          MUŠKO
-        {% else %}
-          ŽENSKO
-        {% endif %}
-      duration_minutes: >
-        {{ states('input_number.zdravomarija_ujutro_duljina') | float }}
-      pre_delay: >
-        {% set m = states('input_datetime.vrijeme_zdravomarije_ujutro')[3:5] | int %}
-        {% if m == 0 %}
-          30
-        {% elif m == 30 %}
-          5
-        {% else %}
-          0
-        {% endif %}
-
-hladjenje_crkve_blueprint:
-  alias: Hlađenje crkve - blueprint
+  sequence:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.kazaljke_negativna
+  - action: switch.turn_on
+    target:
+      entity_id: switch.kazaljke_pozitivna
+  - delay: 00:00:06
+  - action: switch.turn_off
+    target:
+      entity_id: switch.kazaljke_pozitivna
+  description: ''
+kazaljke_impuls_neg_6_s:
+  alias: Kazaljke – impuls NEG (6 s)
   mode: single
-  use_blueprint:
-    path: homeassistant/multi_climate_hvac.yaml
-    input:
-      hvac_mode: cool
-      default_temp: 24
-      climate_config:
-        - climate: climate.9424b8b8c89e
-          enabled: input_boolean.koristi_klimu_crkva_1
-          temp_entity: input_number.klima_temp_hladjenje_crkva
-        - climate: climate.9424b8b8c8a4
-          enabled: input_boolean.koristi_klimu_crkva_2
-          temp_entity: input_number.klima_temp_hladjenje_crkva
-        - climate: climate.9424b8b8c92a
-          enabled: input_boolean.koristi_klimu_crkva_3
-          temp_entity: input_number.klima_temp_hladjenje_crkva
-        - climate: climate.9424b8b87ea5
-          enabled: input_boolean.koristi_klimu_crkva_4
-          temp_entity: input_number.klima_temp_hladjenje_crkva
-        - climate: climate.9424b8698184
-          enabled: input_boolean.koristi_klimu_crkva_5
-          temp_entity: input_number.klima_temp_hladjenje_crkva
-        - climate: climate.c039370a331f
-          enabled: input_boolean.koristi_klimu_sakristija
-          temp_entity: input_number.klima_temp_hladjenje_sakristija
-
+  sequence:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.kazaljke_pozitivna
+  - action: switch.turn_on
+    target:
+      entity_id: switch.kazaljke_negativna
+  - delay: 00:00:06
+  - action: switch.turn_off
+    target:
+      entity_id: switch.kazaljke_negativna
+  description: ''
+kazaljke_automatsko_dovodenje_catch_up:
+  alias: Kazaljke – automatsko dovođenje (catch-up)
+  mode: restart
+  sequence:
+  - variables:
+      dst_hold_active: '{{ is_state(''input_boolean.kazaljke_dst_hold'',''on'') }}'
+  - if:
+    - condition: template
+      value_template: '{{ dst_hold_active }}'
+    then:
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.kazaljke_zadnji_pomak
+      data:
+        date: '{{ now().strftime(''%Y-%m-%d'') }}'
+        time: '{{ now().replace(second=0, microsecond=0).strftime(''%H:%M:%S'') }}'
+    - action: input_boolean.turn_off
+      target:
+        entity_id:
+        - input_boolean.kazaljke_dst_hold
+        - input_boolean.kazaljke_stop
+      data: {}
+    - stop: 'DST hold aktivan: poravnato bez impulsa.'
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.kazaljke_stop
+    data: {}
+  - variables:
+      last_str: '{{ states(''input_datetime.kazaljke_zadnji_pomak'') }}'
+      last_ok: '{{ last_str is string and last_str not in [''unknown'',''unavailable'','''']
+        }}'
+  - if:
+    - condition: template
+      value_template: '{{ not last_ok }}'
+    then:
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.kazaljke_zadnji_pomak
+      data:
+        date: '{{ now().strftime(''%Y-%m-%d'') }}'
+        time: '{{ now().replace(second=0, microsecond=0).strftime(''%H:%M:%S'') }}'
+  - repeat:
+      while:
+      - condition: template
+        value_template: '{% set last = as_datetime(states(''input_datetime.kazaljke_zadnji_pomak''))
+          %} {% set target = now().replace(second=0, microsecond=0) %} {{ last < target
+          }}'
+      sequence:
+      - variables:
+          last: '{{ as_datetime(states(''input_datetime.kazaljke_zadnji_pomak''))
+            }}'
+          step_time: '{{ last + timedelta(minutes=1) }}'
+          even: '{{ (step_time.minute | int) % 2 == 0 }}'
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ even }}'
+          sequence:
+          - action: script.turn_on
+            target:
+              entity_id: script.kazaljke_impuls_poz_6_s
+            data: {}
+        - conditions: []
+          sequence:
+          - action: script.turn_on
+            target:
+              entity_id: script.kazaljke_impuls_neg_6_s
+            data: {}
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.kazaljke_zadnji_pomak
+        data:
+          date: '{{ as_datetime(step_time).strftime(''%Y-%m-%d'') }}'
+          time: '{{ as_datetime(step_time).strftime(''%H:%M:%S'') }}'
+      - action: counter.increment
+        target:
+          entity_id: counter.kazaljke_broj_pomaka
+        data: {}
+      - wait_template: "{{ is_state('switch.kazaljke_pozitivna','off')\n   and is_state('switch.kazaljke_negativna','off')
+          }}"
+        timeout: 00:00:10
+        continue_on_timeout: true
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.kazaljke_stop
+    data: {}
+kazaljke_primijeni_rucnu_poziciju_12h_i_dovedi_na_sada:
+  alias: Kazaljke – primijeni ručnu poziciju (12h) i dovedi na sada
+  mode: single
+  sequence:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.kazaljke_stop
+  - variables:
+      pos_str: '{{ states(''input_datetime.kazaljke_rucna_pozicija'') }}'
+      pos_ok: '{{ pos_str not in [''unknown'',''unavailable'',''''] }}'
+  - if:
+    - condition: template
+      value_template: '{{ not pos_ok }}'
+    then:
+    - action: persistent_notification.create
+      data:
+        title: Kazaljke – ručna pozicija
+        message: Postavi vrijeme u 'Kazaljke – ručna pozicija (12h)'.
+    - stop: Nema ručne pozicije.
+  - variables:
+      pos_h: '{{ strptime(pos_str, ''%H:%M:%S'').hour }}'
+      pos_m: '{{ strptime(pos_str, ''%H:%M:%S'').minute }}'
+      now_dt: '{{ now() }}'
+      cand: '{{ now_dt.replace(hour=pos_h, minute=pos_m, second=0, microsecond=0)
+        }}'
+      last_dt: "{% set c = as_datetime(cand) %} {% if c > now_dt %}\n  {{ (c - timedelta(hours=12))
+        }}\n{% else %}\n  {{ c }}\n{% endif %}"
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.kazaljke_zadnji_pomak
+    data:
+      date: '{{ as_datetime(last_dt).strftime(''%Y-%m-%d'') }}'
+      time: '{{ as_datetime(last_dt).strftime(''%H:%M:%S'') }}'
+  - action: script.turn_on
+    target:
+      entity_id: script.kazaljke_automatsko_dovodenje_catch_up
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.kazaljke_stop
+  description: ''
+cekic_muski_impuls_150_ms:
+  alias: Čekić muški – impuls 150 ms
+  mode: parallel
+  sequence:
+  - target:
+      entity_id: switch.cekic_musko
+    action: switch.turn_on
+  - delay:
+      milliseconds: 150
+  - target:
+      entity_id: switch.cekic_musko
+    action: switch.turn_off
+  description: ''
+cekic_zenski_impuls_150_ms:
+  alias: Čekić ženski – impuls 150 ms
+  mode: parallel
+  sequence:
+  - target:
+      entity_id: switch.cekic_zensko
+    action: switch.turn_on
+  - delay:
+      milliseconds: 150
+  - target:
+      entity_id: switch.cekic_zensko
+    action: switch.turn_off
+  description: ''
+otkucavanje_puni_sat_muski:
+  alias: Otkucavanje – puni sat (muški)
+  mode: single
+  fields:
+    count:
+      name: Broj udaraca
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 12
+          mode: box
+  sequence:
+  - repeat:
+      count: '{{ max(1, (count|int)) }}'
+      sequence:
+      - condition: state
+        entity_id: binary_sensor.otkucavanje_dopusteno_sada
+        state: 'on'
+      - target:
+          entity_id: switch.cekic_musko
+        action: switch.turn_on
+      - delay:
+          milliseconds: 150
+      - target:
+          entity_id: switch.cekic_musko
+        action: switch.turn_off
+      - delay:
+          seconds: 2
+  description: ''
+otkucavanje_pola_sata_zenski_1:
+  alias: Otkucavanje – pola sata (ženski 1×)
+  mode: single
+  sequence:
+  - condition: state
+    entity_id: binary_sensor.otkucavanje_dopusteno_sada
+    state: 'on'
+  - target:
+      entity_id: switch.cekic_zensko
+    action: switch.turn_on
+  - delay:
+      milliseconds: 150
+  - target:
+      entity_id: switch.cekic_zensko
+    action: switch.turn_off
+  description: ''

@@ -1270,39 +1270,14 @@
       - condition: template
         value_template: '{{ trigger.id == ''full'' }}'
       sequence:
-      - variables:
-          kucaji: '{{ 12 if (now().hour % 12) == 0 else (now().hour % 12) }}'
-      - repeat:
-          count: '{{ kucaji }}'
-          sequence:
-          - condition: state
-            entity_id: binary_sensor.otkucavanje_dopusteno_sada
-            state: 'on'
-          - target:
-              entity_id: switch.cekic_musko
-            action: switch.turn_on
-          - delay:
-              milliseconds: 150
-          - target:
-              entity_id: switch.cekic_musko
-            action: switch.turn_off
-          - delay:
-              seconds: 2
+      - action: script.otkucavanje_puni_sat_muski
+        data:
+          count: "{{ 12 if (now().hour % 12) == 0 else (now().hour % 12) }}"
     - conditions:
       - condition: template
         value_template: '{{ trigger.id == ''half'' }}'
       sequence:
-      - condition: state
-        entity_id: binary_sensor.otkucavanje_dopusteno_sada
-        state: 'on'
-      - target:
-          entity_id: switch.cekic_zensko
-        action: switch.turn_on
-      - delay:
-          milliseconds: 150
-      - target:
-          entity_id: switch.cekic_zensko
-        action: switch.turn_off
+      - action: script.otkucavanje_pola_sata_zenski_1
   mode: single
 - id: '1755264429080'
   alias: Vazmeno trodnevlje – upravljaj chime_enable (jednostavno)

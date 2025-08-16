@@ -1313,3 +1313,18 @@
           entity_id: input_boolean.chime_enable
         action: input_boolean.turn_on
   mode: single
+- id: '1757788888888'
+  alias: Motor ploče – periodični impuls
+  triggers:
+  - minutes: '14,29,44,59'
+    seconds: '0'
+    trigger: time_pattern
+  conditions:
+  - condition: time
+    after: '04:59:00'
+    before: '20:45:00'
+  actions:
+  - action: script.turn_on
+    target:
+      entity_id: script.motor_ploce_impuls_poz_neg
+  mode: single

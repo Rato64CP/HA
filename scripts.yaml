@@ -167,6 +167,17 @@ kazaljke_automatsko_dovodenje_catch_up:
       data:
         date: '{{ now().strftime(''%Y-%m-%d'') }}'
         time: '{{ now().replace(second=0, microsecond=0).strftime(''%H:%M:%S'') }}'
+  - variables:
+      now_dt: "{{ now().replace(second=0, microsecond=0) }}"
+      last_dt: "{{ as_datetime(states('input_datetime.kazaljke_zadnji_pomak')) }}"
+      delta: "{{ ((now_dt - last_dt).total_seconds() / 60) | int }}"
+      adj_dt: "{{ now_dt - timedelta(minutes=(delta % 720)) }}"
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.kazaljke_zadnji_pomak
+    data:
+      date: "{{ as_datetime(adj_dt).strftime('%Y-%m-%d') }}"
+      time: "{{ as_datetime(adj_dt).strftime('%H:%M:%S') }}"
   - repeat:
       while:
       - condition: template
